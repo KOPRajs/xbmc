@@ -58,7 +58,7 @@ bool CWinSystemGbmGLESContext::InitWindowSystem()
   CDVDFactoryCodec::ClearHWAccels();
   CLinuxRendererGLES::Register();
   RETRO::CRPProcessInfoGbm::Register();
-  RETRO::CRPProcessInfoGbm::RegisterRendererFactory(new RETRO::CRendererFactoryDMA);
+  // RETRO::CRPProcessInfoGbm::RegisterRendererFactory(new RETRO::CRendererFactoryDMA);
   RETRO::CRPProcessInfoGbm::RegisterRendererFactory(new RETRO::CRendererFactoryFBO);
   RETRO::CRPProcessInfoGbm::RegisterRendererFactory(new RETRO::CRendererFactoryOpenGLES);
 

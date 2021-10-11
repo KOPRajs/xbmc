@@ -54,7 +54,7 @@ bool CWinSystemGbmGLContext::InitWindowSystem()
   CDVDFactoryCodec::ClearHWAccels();
   CLinuxRendererGL::Register();
   RETRO::CRPProcessInfoGbm::Register();
-  RETRO::CRPProcessInfoGbm::RegisterRendererFactory(new RETRO::CRendererFactoryDMA);
+  // RETRO::CRPProcessInfoGbm::RegisterRendererFactory(new RETRO::CRendererFactoryDMA);
   RETRO::CRPProcessInfoGbm::RegisterRendererFactory(new RETRO::CRendererFactoryFBO);
   RETRO::CRPProcessInfoGbm::RegisterRendererFactory(new RETRO::CRendererFactoryOpenGL);
 
