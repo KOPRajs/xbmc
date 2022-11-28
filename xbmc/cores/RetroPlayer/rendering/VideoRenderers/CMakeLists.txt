@@ -8,6 +8,11 @@ if(CORE_SYSTEM_NAME STREQUAL windows)
   list(APPEND HEADERS RPWinRenderer.h)
 endif()
 
+if(TARGET OpenGL::GL OR TARGET OpenGL::GLES)
+  list(APPEND SOURCES RPRendererFBO.cpp)
+  list(APPEND HEADERS RPRendererFBO.h)
+endif()
+
 if(TARGET OpenGL::GL)
   list(APPEND SOURCES RPRendererOpenGL.cpp)
   list(APPEND HEADERS RPRendererOpenGL.h)
