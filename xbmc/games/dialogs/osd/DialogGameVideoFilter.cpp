@@ -109,7 +109,7 @@ void CDialogGameVideoFilter::InitVideoFilters()
 #endif
 
   // TODO: Have the add-on give us the xml as a string (or parse it)
-  static const std::string addonPath = std::string("special://xbmcbinaddons/") + PRESETS_ADDON_NAME;
+  static const std::string addonPath = std::string("special://home/addons/") + PRESETS_ADDON_NAME;
   static const std::string xmlPath = addonPath + "/resources/" + xmlFilename;
   std::string basePath = URIUtils::GetBasePath(xmlPath);
 
@@ -117,7 +117,7 @@ void CDialogGameVideoFilter::InitVideoFilters()
 
   if (!xml.LoadFile())
   {
-    CLog::LogF(LOGERROR, "Couldn't load shader presets from {}", CURL::GetRedacted(xmlPath));
+    CLog::LogF(LOGERROR, "Couldn't load shader presets from default XML, {}", CURL::GetRedacted(xmlPath));
     return;
   }
 
@@ -151,8 +151,8 @@ void CDialogGameVideoFilter::InitVideoFilters()
     videoFilters.emplace_back(videoFilter);
   }
 
-  CLog::Log(LOGDEBUG, "Loaded %d shader presets from default .xml, %s", videoFilters.size(),
-            CURL::GetRedacted(xmlPath).c_str());
+  CLog::Log(LOGDEBUG, "Loaded {} shader presets from default XML, {}", videoFilters.size(),
+            CURL::GetRedacted(xmlPath));
 
   for (const auto& videoFilter : videoFilters)
   {

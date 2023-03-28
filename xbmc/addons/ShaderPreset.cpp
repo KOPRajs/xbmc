@@ -109,7 +109,7 @@ bool CShaderPresetAddon::CreateAddon(void)
   ResetProperties();
 
   // Initialise the add-on
-  CLog::Log(LOGDEBUG, "%s - creating ShaderPreset add-on instance '%s'", __FUNCTION__,
+  CLog::Log(LOGDEBUG, "{} - creating ShaderPreset add-on instance '{}'", __FUNCTION__,
             Name().c_str());
 
   if (CreateInstance() != ADDON_STATUS_OK)
