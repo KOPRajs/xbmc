@@ -24,6 +24,7 @@
 #include "cores/RetroPlayer/savestates/ISavestate.h"
 #include "cores/RetroPlayer/savestates/SavestateDatabase.h"
 #include "cores/RetroPlayer/streams/RetroPlayerVideo.h"
+#include "cores/RetroPlayer/streams/RetroPlayerRendering.h"
 #include "filesystem/File.h"
 #include "pictures/Picture.h"
 #include "threads/SingleLock.h"
@@ -121,6 +122,31 @@ bool CRPRenderManager::Configure(AVPixelFormat format,
   m_state = RENDER_STATE::CONFIGURING;
 
   return true;
+}
+
+bool CRPRenderManager::Create(unsigned int width, unsigned int height)
+{
+  std::shared_ptr<CRPBaseRenderer> renderer = GetRendererForSettings(nullptr);
+  if (!renderer)
+    return false;
+
+  renderer->Configure(m_format);
+
+  std::vector<IRenderBuffer*> renderBuffers;
+  for (IRenderBufferPool* bufferPool : m_processInfo.GetBufferManager().GetBufferPools())
+  {
+    if (!bufferPool->HasVisibleRenderer())
+      continue;
+
+    IRenderBuffer* renderBuffer = bufferPool->GetBuffer(width, height);
+    if (renderBuffer != nullptr)
+    {
+      renderBuffer->Release();
+      return true;
+    }
+  }
+
+  return false;
 }
 
 bool CRPRenderManager::GetVideoBuffer(unsigned int width,
@@ -265,19 +291,8 @@ void CRPRenderManager::AddFrame(const uint8_t* data,
   }
 }
 
-void CRPRenderManager::RenderFrame()
+bool CRPRenderManager::GetCurrentFramebuffer(unsigned int width, unsigned int height, HwFramebufferBuffer& buffer)
 {
-  std::unique_lock<CCriticalSection> lock(m_bufferMutex);
-
-  for (auto renderBuffer : m_renderBuffers)
-    renderBuffer->Release();
-
-  m_renderBuffers = std::move(m_pendingBuffers);
-}
-
-uintptr_t CRPRenderManager::GetCurrentFramebuffer(unsigned int width, unsigned int height)
-{
-  std::vector<IRenderBuffer*> renderBuffers;
   for (IRenderBufferPool* bufferPool : m_processInfo.GetBufferManager().GetBufferPools())
   {
     if (!bufferPool->HasVisibleRenderer())
@@ -286,37 +301,69 @@ uintptr_t CRPRenderManager::GetCurrentFramebuffer(unsigned int width, unsigned i
     IRenderBuffer* renderBuffer = bufferPool->GetBuffer(width, height);
     if (renderBuffer != nullptr)
     {
+      uintptr_t framebuffer = renderBuffer->GetCurrentFramebuffer();
+      buffer = HwFramebufferBuffer(framebuffer, renderBuffer->TextureID());
+
+      // Clear any previous pending buffers
+      /*for (IRenderBuffer* buffer : m_pendingBuffers)
+        buffer->Release();
+      m_pendingBuffers.clear();*/
+
       m_pendingBuffers.emplace_back(renderBuffer);
-      return renderBuffer->GetCurrentFramebuffer();
-    }
-  }
 
-  return 0;
-}
-
-bool CRPRenderManager::Create(unsigned int width, unsigned int height)
-{
-  std::shared_ptr<CRPBaseRenderer> renderer = GetRendererForSettings(nullptr);
-  if (!renderer)
-    return false;
-
-  renderer->Configure(m_format);
-
-  std::vector<IRenderBuffer*> renderBuffers;
-  for (IRenderBufferPool* bufferPool : m_processInfo.GetBufferManager().GetBufferPools())
-  {
-    if (!bufferPool->HasVisibleRenderer())
-      continue;
-
-    IRenderBuffer* renderBuffer = bufferPool->GetBuffer(width, height);
-    if (renderBuffer != nullptr)
-    {
-      renderBuffer->Release();
       return true;
     }
   }
 
   return false;
+}
+
+void CRPRenderManager::RenderFrame(uintptr_t framebuffer, uintptr_t texture)
+{
+  if (m_bFlush || m_state != RENDER_STATE::CONFIGURED)
+    return;
+
+  // Validate parameters
+  if (framebuffer == 0 || texture == 0)
+    return;
+
+  // Get render buffers to copy the frame into
+  std::vector<IRenderBuffer*> renderBuffers;
+
+  /*for (IRenderBuffer* buffer : m_pendingBuffers)
+  {
+    if (buffer->IsRendered())
+    {
+      buffer->Release();
+      m_pendingBuffers.erase(std::find(m_pendingBuffers.begin(), m_pendingBuffers.end(), buffer));
+    }
+  }*/
+
+  while (m_pendingBuffers.size() > 30)
+  {
+    IRenderBuffer* buffer = m_pendingBuffers[0];
+    buffer->Release();
+    m_pendingBuffers.erase(std::find(m_pendingBuffers.begin(), m_pendingBuffers.end(), buffer));
+  }
+
+  /*for (IRenderBuffer* buffer : m_pendingBuffers)
+  {
+    buffer->Acquire();
+    renderBuffers.emplace_back(buffer);
+  }*/
+
+  IRenderBuffer* buffer = m_pendingBuffers[0];
+  buffer->Acquire();
+  renderBuffers.emplace_back(buffer);
+
+  CLog::Log(LOGDEBUG, "RetroPlayer[RENDER]: m_pendingBuffers.size(): {}", m_pendingBuffers.size());
+
+  std::unique_lock<CCriticalSection> lock(m_bufferMutex);
+
+  // Set render buffers
+  for (auto renderBuffer : m_renderBuffers)
+    renderBuffer->Release();
+  m_renderBuffers = std::move(renderBuffers);
 }
 
 void CRPRenderManager::SetSpeed(double speed)

@@ -33,6 +33,8 @@ public:
 
   uintptr_t GetCurrentFramebuffer() override { return 0; }
 
+  uintptr_t TextureID() const override { return 0; }
+
 protected:
   // Reference counting
   std::atomic_int m_refCount;

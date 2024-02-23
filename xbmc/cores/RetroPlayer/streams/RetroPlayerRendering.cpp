@@ -71,29 +71,27 @@ bool CRetroPlayerRendering::OpenStream(const StreamProperties& properties)
   return m_renderManager.Create(maxWidth, maxHeight);
 }
 
-void CRetroPlayerRendering::CloseStream()
-{
-  CLog::Log(LOGDEBUG, "RetroPlayer[RENDERING]: Closing rendering stream");
-
-  //! @todo
-}
-
 bool CRetroPlayerRendering::GetStreamBuffer(unsigned int width,
                                             unsigned int height,
                                             StreamBuffer& buffer)
 {
   HwFramebufferBuffer& hwBuffer = static_cast<HwFramebufferBuffer&>(buffer);
 
-  hwBuffer.framebuffer = m_renderManager.GetCurrentFramebuffer(width, height);
+  m_renderManager.GetCurrentFramebuffer(width, height, hwBuffer);
 
   return true;
 }
 
 void CRetroPlayerRendering::AddStreamData(const StreamPacket& packet)
 {
-  // This is left here in case anything gets added to the api in the future
-  [[maybe_unused]] const HwFramebufferPacket& hwPacket =
-      static_cast<const HwFramebufferPacket&>(packet);
+  const HwFramebufferPacket& hwPacket = static_cast<const HwFramebufferPacket&>(packet);
 
-  m_renderManager.RenderFrame();
+  m_renderManager.RenderFrame(hwPacket.framebuffer, hwPacket.texture);
+}
+
+void CRetroPlayerRendering::CloseStream()
+{
+  CLog::Log(LOGDEBUG, "RetroPlayer[RENDERING]: Closing rendering stream");
+
+  //! @todo
 }

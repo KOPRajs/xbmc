@@ -38,12 +38,29 @@ class CRPRenderManager;
 
 struct HwFramebufferBuffer : public StreamBuffer
 {
+  HwFramebufferBuffer() = default;
+
+  HwFramebufferBuffer(uintptr_t framebuffer,
+                      uintptr_t texture)
+    : framebuffer(framebuffer), texture(texture)
+  {
+  }
+
   uintptr_t framebuffer;
+  uintptr_t texture;
 };
 
 struct HwFramebufferPacket : public StreamPacket
 {
-  HwFramebufferPacket() {}
+  HwFramebufferPacket(uintptr_t framebuffer,
+                      uintptr_t texture)
+    : framebuffer(framebuffer),
+      texture(texture)
+  {
+  }
+
+  uintptr_t framebuffer;
+  uintptr_t texture;
 };
 
 struct RenderingStreamProperties : public StreamProperties

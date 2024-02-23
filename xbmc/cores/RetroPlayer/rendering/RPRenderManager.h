@@ -42,6 +42,7 @@ class IRenderBuffer;
 class IRenderBufferPool;
 class ISavestate;
 struct VideoStreamBuffer;
+struct HwFramebufferBuffer;
 
 /*!
  * \brief Renders video frames provided by the game loop
@@ -93,20 +94,16 @@ public:
                  unsigned int maxWidth,
                  unsigned int maxHeight,
                  float pixelAspectRatio);
+  bool Create(unsigned int width, unsigned int height);
   bool GetVideoBuffer(unsigned int width, unsigned int height, VideoStreamBuffer& buffer);
   void AddFrame(const uint8_t* data,
                 size_t size,
                 unsigned int width,
                 unsigned int height,
                 unsigned int orientationDegCW);
-
-  void RenderFrame();
-
+  bool GetCurrentFramebuffer(unsigned int width, unsigned int height, HwFramebufferBuffer& buffer);
+  void RenderFrame(uintptr_t framebuffer, uintptr_t texture);
   void Flush();
-
-  uintptr_t GetCurrentFramebuffer(unsigned int width, unsigned int height);
-
-  bool Create(unsigned int width, unsigned int height);
 
   // Functions called from the player
   void SetSpeed(double speed);

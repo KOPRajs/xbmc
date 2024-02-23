@@ -50,7 +50,7 @@ public:
 
   uintptr_t GetCurrentFramebuffer() override;
 
-  GLuint TextureID() const { return m_tex_id; }
+  uintptr_t TextureID() const override { return m_tex_id; }
 
 protected:
   CRenderContext& m_context;

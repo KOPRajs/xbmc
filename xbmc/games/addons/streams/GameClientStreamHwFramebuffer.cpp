@@ -51,6 +51,7 @@ void CGameClientStreamHwFramebuffer::CloseStream()
     m_stream = nullptr;
   }
 }
+
 bool CGameClientStreamHwFramebuffer::GetBuffer(unsigned int width,
                                                unsigned int height,
                                                game_stream_buffer& buffer)
@@ -65,6 +66,7 @@ bool CGameClientStreamHwFramebuffer::GetBuffer(unsigned int width,
                                   static_cast<RETRO::StreamBuffer&>(hwFramebufferBuffer)))
     {
       buffer.hw_framebuffer.framebuffer = hwFramebufferBuffer.framebuffer;
+      buffer.hw_framebuffer.texture = hwFramebufferBuffer.texture;
 
       if (!m_contextReset)
       {
@@ -86,10 +88,9 @@ void CGameClientStreamHwFramebuffer::AddData(const game_stream_packet& packet)
 
   if (m_stream != nullptr)
   {
-    // This is left here in case anything gets added to the api in the future
-    [[maybe_unused]] const game_stream_hw_framebuffer_packet& hwFramebuffer = packet.hw_framebuffer;
+    const game_stream_hw_framebuffer_packet& hwFramebuffer = packet.hw_framebuffer;
 
-    RETRO::HwFramebufferPacket hwFramebufferPacket{};
+    RETRO::HwFramebufferPacket hwFramebufferPacket{hwFramebuffer.framebuffer, hwFramebuffer.texture};
 
     m_stream->AddStreamData(static_cast<const RETRO::StreamPacket&>(hwFramebufferPacket));
   }

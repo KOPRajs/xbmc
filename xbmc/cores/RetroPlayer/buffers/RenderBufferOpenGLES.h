@@ -31,7 +31,7 @@ public:
   // implementation of IRenderBuffer via CRenderBufferSysMem
   bool UploadTexture() override;
 
-  GLuint TextureID() const { return m_textureId; }
+  uintptr_t TextureID() const override { return m_textureId; }
 
 private:
   // Construction parameters

@@ -402,6 +402,7 @@ extern "C"
   {
     /// @brief
     uintptr_t framebuffer;
+    uintptr_t texture;
   } ATTR_PACKED game_stream_hw_framebuffer_buffer;
   //----------------------------------------------------------------------------
 
@@ -411,6 +412,8 @@ extern "C"
   typedef struct game_stream_hw_framebuffer_packet
   {
     /// @brief
+    uintptr_t framebuffer;
+    uintptr_t texture;
   } ATTR_PACKED game_stream_hw_framebuffer_packet;
   //----------------------------------------------------------------------------
 
