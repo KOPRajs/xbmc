@@ -107,17 +107,21 @@ bool CShaderPresetGL::RenderUpdate(const CPoint* dest,
 
   const unsigned passesNum = static_cast<unsigned int>(m_pShaderTextures.size());
 
-  if (passesNum == 1)
+  if (passesNum == 1) {
+    firstShader->PrepareParameters(m_dest, true, static_cast<uint64_t>(m_frameCount));
     firstShader->Render(source, target);
+  }
   else if (passesNum == 2)
   {
     // Initialize FBO
     firstShaderTexture->CreateFBO(screenWidth, screenHeight);
     // Apply first pass
     firstShaderTexture->BindFBO();
+    firstShader->PrepareParameters(m_dest, false, static_cast<uint64_t>(m_frameCount));
     RenderShader(firstShader, source, target);
     firstShaderTexture->UnbindFBO();
     // Apply last pass
+    lastShader->PrepareParameters(m_dest, true, static_cast<uint64_t>(m_frameCount));
     RenderShader(lastShader, firstShaderTexture, target);
   }
   else
@@ -126,6 +130,7 @@ bool CShaderPresetGL::RenderUpdate(const CPoint* dest,
     firstShaderTexture->CreateFBO(screenWidth, screenHeight);
     // Apply first pass
     firstShaderTexture->BindFBO();
+    firstShader->PrepareParameters(m_dest, false, static_cast<uint64_t>(m_frameCount));
     RenderShader(firstShader, source, target);
     firstShaderTexture->UnbindFBO();
 
@@ -138,6 +143,7 @@ bool CShaderPresetGL::RenderUpdate(const CPoint* dest,
       CShaderTextureGL* texture = m_pShaderTextures[shaderIdx].get();
       texture->CreateFBO(screenWidth, screenHeight);
       texture->BindFBO();
+      shader->PrepareParameters(m_dest, false, static_cast<uint64_t>(m_frameCount));
       RenderShader(shader, prevTexture,
                    target); // The target on each call is only used for setting the viewport
       texture->UnbindFBO();
@@ -146,6 +152,7 @@ bool CShaderPresetGL::RenderUpdate(const CPoint* dest,
     // TODO: Remove last texture, useless
     // Apply last pass
     CShaderTextureGL* secToLastTexture = m_pShaderTextures[m_pShaderTextures.size() - 2].get();
+    lastShader->PrepareParameters(m_dest, true, static_cast<uint64_t>(m_frameCount));
     RenderShader(lastShader, secToLastTexture, target);
   }
 
@@ -410,14 +417,6 @@ void CShaderPresetGL::DisposeShaders()
 
 void CShaderPresetGL::PrepareParameters(const IShaderTexture* texture, const CPoint* dest)
 {
-  for (unsigned shaderIdx = 0; shaderIdx < m_pShaders.size() - 1; ++shaderIdx)
-  {
-    auto& videoShader = m_pShaders[shaderIdx];
-    videoShader->PrepareParameters(m_dest, false, static_cast<uint64_t>(m_frameCount));
-  }
-
-  m_pShaders.back()->PrepareParameters(m_dest, true, static_cast<uint64_t>(m_frameCount));
-
   if (m_dest[0] != dest[0] || m_dest[1] != dest[1] || m_dest[2] != dest[2] ||
       m_dest[3] != dest[3] || texture->GetWidth() != m_outputSize.x ||
       texture->GetHeight() != m_outputSize.y)
