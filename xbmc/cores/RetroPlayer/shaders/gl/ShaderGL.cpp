@@ -85,7 +85,7 @@ bool CShaderGL::Create(const std::string& shaderSource,
   glDeleteShader(vShader);
   glDeleteShader(fShader);
 
-  glUseProgram(m_shaderProgram);
+  SetShaderParameters();
 
 #ifndef HAS_GLES
   glGenVertexArrays(1, &VAO);
@@ -99,7 +99,6 @@ void CShaderGL::Render(IShaderTexture* source, IShaderTexture* target)
 {
   CShaderTextureGL* sourceGL = static_cast<CShaderTextureGL*>(source);
   sourceGL->GetPointer()->BindToUnit(0);
-  glUseProgram(m_shaderProgram);
 
   for (unsigned int i = 0; i < m_luts.size(); ++i)
   {
@@ -112,18 +111,6 @@ void CShaderGL::Render(IShaderTexture* source, IShaderTexture* target)
     }
   }
 
-#ifndef HAS_GLES
-  glBindVertexArray(VAO);
-#endif
-  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
-void CShaderGL::SetShaderParameters()
-{
-  glUseProgram(m_shaderProgram);
   glUniformMatrix4fv(m_MVPMatrixLoc, 1, GL_FALSE, reinterpret_cast<const GLfloat*>(&m_MVP));
 
 #ifndef HAS_GLES
@@ -148,6 +135,15 @@ void CShaderGL::SetShaderParameters()
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_indices), m_indices, GL_STATIC_DRAW);
 
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void CShaderGL::SetShaderParameters()
+{
+  glUseProgram(m_shaderProgram);
   for (const auto& parameter : m_shaderParameters)
   {
     GLint paramLoc = glGetUniformLocation(m_shaderProgram, parameter.first.c_str());
@@ -157,8 +153,6 @@ void CShaderGL::SetShaderParameters()
 
 void CShaderGL::PrepareParameters(CPoint* dest, bool isLastPass, uint64_t frameCount)
 {
-  UpdateInputBuffer(frameCount);
-
   if (!isLastPass)
   {
     // bottom left x,y
@@ -229,7 +223,7 @@ void CShaderGL::PrepareParameters(CPoint* dest, bool isLastPass, uint64_t frameC
   m_indices[1][1] = 2;
   m_indices[1][2] = 3;
 
-  SetShaderParameters();
+  UpdateInputBuffer(frameCount);
 }
 
 void CShaderGL::UpdateMVP()
