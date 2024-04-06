@@ -85,8 +85,6 @@ bool CShaderGL::Create(const std::string& shaderSource,
   glDeleteShader(vShader);
   glDeleteShader(fShader);
 
-  glUseProgram(m_shaderProgram);
-
 #ifndef HAS_GLES
   glGenVertexArrays(1, &VAO);
 #endif
@@ -99,7 +97,6 @@ void CShaderGL::Render(IShaderTexture* source, IShaderTexture* target)
 {
   CShaderTextureGL* sourceGL = static_cast<CShaderTextureGL*>(source);
   sourceGL->GetPointer()->BindToUnit(0);
-  glUseProgram(m_shaderProgram);
 
   for (unsigned int i = 0; i < m_luts.size(); ++i)
   {
@@ -123,7 +120,6 @@ void CShaderGL::Render(IShaderTexture* source, IShaderTexture* target)
 
 void CShaderGL::SetShaderParameters()
 {
-  glUseProgram(m_shaderProgram);
   glUniformMatrix4fv(m_MVPMatrixLoc, 1, GL_FALSE, reinterpret_cast<const GLfloat*>(&m_MVP));
 
 #ifndef HAS_GLES
@@ -157,8 +153,6 @@ void CShaderGL::SetShaderParameters()
 
 void CShaderGL::PrepareParameters(CPoint* dest, bool isLastPass, uint64_t frameCount)
 {
-  UpdateInputBuffer(frameCount);
-
   if (!isLastPass)
   {
     // bottom left x,y
@@ -229,6 +223,7 @@ void CShaderGL::PrepareParameters(CPoint* dest, bool isLastPass, uint64_t frameC
   m_indices[1][1] = 2;
   m_indices[1][2] = 3;
 
+  UpdateInputBuffer(frameCount);
   SetShaderParameters();
 }
 
