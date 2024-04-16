@@ -32,7 +32,7 @@ CShaderPresetDX::CShaderPresetDX(RETRO::CRenderContext& context,
                                  unsigned videoHeight)
   : m_context(context), m_videoSize(videoWidth, videoHeight)
 {
-  m_textureSize = CShaderUtils::GetOptimalTextureSize(m_videoSize);
+  //m_textureSize = CShaderUtils::GetOptimalTextureSize(m_videoSize);
 
   CRect viewPort;
   m_context.GetViewPort(viewPort);
@@ -320,7 +320,7 @@ bool CShaderPresetDX::CreateShaders()
   auto numPasses = m_passes.size();
   // todo: replace with per-shader texture size
   // todo: actually use this
-  m_textureSize = CShaderUtils::GetOptimalTextureSize(m_videoSize);
+  //m_textureSize = CShaderUtils::GetOptimalTextureSize(m_videoSize);
 
   // todo: is this pass specific?
   ShaderLutVec passLUTsDX;
@@ -480,7 +480,7 @@ const std::string& CShaderPresetDX::GetShaderPreset() const
 void CShaderPresetDX::SetVideoSize(const unsigned videoWidth, const unsigned videoHeight)
 {
   m_videoSize = {videoWidth, videoHeight};
-  m_textureSize = CShaderUtils::GetOptimalTextureSize(m_videoSize);
+  //m_textureSize = CShaderUtils::GetOptimalTextureSize(m_videoSize);
 }
 
 void CShaderPresetDX::UpdateMVPs()

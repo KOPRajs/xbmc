@@ -98,7 +98,7 @@ private:
 
   // The size of the input texture itself
   // Power-of-two sized.
-  float2 m_textureSize;
+  // float2 m_textureSize;
 
   // Size of the actual source video data (ie. 160x144 for the Game Boy)
   float2 m_videoSize;
