@@ -230,4 +230,3 @@ GLuint CGLTexture::getMTexture() const
 {
   return m_texture;
 }
-

@@ -8,6 +8,7 @@
 
 #include "ShaderGL.h"
 
+#include "ServiceBroker.h"
 #include "ShaderTextureGL.h"
 #include "ShaderUtilsGL.h"
 #include "application/Application.h"
@@ -46,18 +47,24 @@ bool CShaderGL::Create(const std::string& shaderSource,
   m_viewportSize = viewPortSize;
   m_frameCountMod = frameCountMod;
 
-  std::string defineVertex = "#define VERTEX\n";
+  unsigned int major, minor;
+  CServiceBroker::GetRenderSystem()->GetRenderVersion(major, minor);
+
+  std::string defineVertex = "#define VERTEX\n#define PARAMETER_UNIFORM\n";
   std::string defineFragment;
 
-  if (m_shaderParameters.empty())
-    defineFragment = "#define FRAGMENT\n";
-  else
+//  if (m_shaderParameters.empty())
+//    defineFragment = "#version 130\n#define FRAGMENT\n";
+//  else
     defineFragment = "#define FRAGMENT\n#define PARAMETER_UNIFORM\n";
 
   if (m_shaderSource.rfind("#version", 0) == 0)
   {
     CShaderUtilsGL::MoveVersionToFirstLine(m_shaderSource, defineVertex, defineFragment);
   }
+
+  CLog::Log(LOGWARNING, "defineVertex:\n{}", defineVertex);
+  CLog::Log(LOGWARNING, "defineFragment:\n{}", defineFragment);
 
   std::string vertexShaderSourceStr = defineVertex + m_shaderSource;
   std::string fragmentShaderSourceStr = defineFragment + m_shaderSource;
@@ -78,8 +85,9 @@ bool CShaderGL::Create(const std::string& shaderSource,
   glAttachShader(m_shaderProgram, vShader);
   glAttachShader(m_shaderProgram, fShader);
   glBindAttribLocation(m_shaderProgram, 0, "VertexCoord");
-  glBindAttribLocation(m_shaderProgram, 1, "TexCoord");
-  glBindAttribLocation(m_shaderProgram, 2, "COLOR");
+  glBindAttribLocation(m_shaderProgram, 1, "COLOR");
+  glBindAttribLocation(m_shaderProgram, 2, "TexCoord");
+  glBindAttribLocation(m_shaderProgram, 3, "LUTTexCoord");
 
   glLinkProgram(m_shaderProgram);
   glDeleteShader(vShader);
@@ -90,7 +98,7 @@ bool CShaderGL::Create(const std::string& shaderSource,
 #ifndef HAS_GLES
   glGenVertexArrays(1, &VAO);
 #endif
-  glGenBuffers(3, VBO);
+  glGenBuffers(4, VBO);
   glGenBuffers(1, &EBO);
   return true;
 }
@@ -106,8 +114,6 @@ void CShaderGL::Render(IShaderTexture* source, IShaderTexture* target)
     auto* lutTexture = dynamic_cast<CShaderTextureGL*>(m_luts[i].get()->GetTexture());
     if (lutTexture)
     {
-      GLint paramLoc = glGetUniformLocation(m_shaderProgram, m_luts[i]->GetID().c_str());
-      glUniform1i(paramLoc, 1 + i);
       lutTexture->GetPointer()->BindToUnit(1 + i);
     }
   }
@@ -125,13 +131,18 @@ void CShaderGL::Render(IShaderTexture* source, IShaderTexture* target)
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
   glBufferData(GL_ARRAY_BUFFER, sizeof(m_colors), m_colors, GL_STATIC_DRAW);
-  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(1);
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
   glBufferData(GL_ARRAY_BUFFER, sizeof(m_TexCoords), m_TexCoords, GL_STATIC_DRAW);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(2);
+
+  glBindBuffer(GL_ARRAY_BUFFER, VBO[3]);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(m_LUTTexCoords), m_LUTTexCoords, GL_STATIC_DRAW);
+  glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(3);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_indices), m_indices, GL_STATIC_DRAW);
@@ -151,10 +162,23 @@ void CShaderGL::SetShaderParameters()
     GLint paramLoc = glGetUniformLocation(m_shaderProgram, parameter.first.c_str());
     glUniform1f(paramLoc, parameter.second);
   }
+
+  for (unsigned int i = 0; i < m_luts.size(); ++i)
+  {
+    auto* lutTexture = dynamic_cast<CShaderTextureGL*>(m_luts[i].get()->GetTexture());
+    if (lutTexture)
+    {
+      GLint paramLoc = glGetUniformLocation(m_shaderProgram, m_luts[i]->GetID().c_str());
+      glUniform1i(paramLoc, 1 + i);
+    }
+  }
 }
 
 void CShaderGL::PrepareParameters(CPoint dest[4], bool isLastPass, uint64_t frameCount)
 {
+  GLfloat xamt = 0.0f;
+  GLfloat yamt = 0.0f;
+
   if (!isLastPass)
   {
     // bottom left x,y
@@ -172,6 +196,9 @@ void CShaderGL::PrepareParameters(CPoint dest[4], bool isLastPass, uint64_t fram
 
     // Set destination rectangle size
     m_destSize = m_outputSize;
+
+    xamt = 1.0f;
+    yamt = 1.0f;
   }
   else // last pass
   {
@@ -190,36 +217,47 @@ void CShaderGL::PrepareParameters(CPoint dest[4], bool isLastPass, uint64_t fram
 
     // Set destination rectangle size for the last pass
     m_destSize = {dest[2].x - dest[0].x, dest[2].y - dest[0].y};
+
+    xamt = m_inputSize.x / m_inputTextureSize.x;
+    yamt = m_inputSize.y / m_inputTextureSize.y;
   }
 
   // bottom left z, tu, tv, r, g, b
   m_VertexCoords[0][2] = 0;
-  m_TexCoords[0][0] = 0.0f;
-  m_TexCoords[0][1] = 1.0f;
   m_colors[0][0] = 0.0f;
   m_colors[0][1] = 0.0f;
   m_colors[0][2] = 0.0f;
+  m_TexCoords[0][0] = 0.0f;
+  m_TexCoords[0][1] = yamt;
+  m_LUTTexCoords[0][0] = 0.0f;
+  m_LUTTexCoords[0][1] = 1.0f;
   // bottom right z, tu, tv, r, g, b
   m_VertexCoords[1][2] = 0;
-  m_TexCoords[1][0] = 1.0f;
-  m_TexCoords[1][1] = 1.0f;
   m_colors[1][0] = 0.0f;
   m_colors[1][1] = 0.0f;
   m_colors[1][2] = 0.0f;
+  m_TexCoords[1][0] = xamt;
+  m_TexCoords[1][1] = yamt;
+  m_LUTTexCoords[1][0] = 1.0f;
+  m_LUTTexCoords[1][1] = 1.0f;
   // top right z, tu, tv, r, g, b
   m_VertexCoords[2][2] = 0;
-  m_TexCoords[2][0] = 1.0f;
-  m_TexCoords[2][1] = 0.0f;
   m_colors[2][0] = 0.0f;
   m_colors[2][1] = 0.0f;
   m_colors[2][2] = 0.0f;
+  m_TexCoords[2][0] = xamt;
+  m_TexCoords[2][1] = 0.0f;
+  m_LUTTexCoords[2][0] = 1.0f;
+  m_LUTTexCoords[2][1] = 0.0f;
   // top left z, tu, tv, r, g, b
   m_VertexCoords[3][2] = 0;
-  m_TexCoords[3][0] = 0.0f;
-  m_TexCoords[3][1] = 0.0f;
   m_colors[3][0] = 0.0f;
   m_colors[3][1] = 0.0f;
   m_colors[3][2] = 0.0f;
+  m_TexCoords[3][0] = 0.0f;
+  m_TexCoords[3][1] = 0.0f;
+  m_LUTTexCoords[3][0] = 0.0f;
+  m_LUTTexCoords[3][1] = 0.0f;
 
   m_indices[0][0] = 0;
   m_indices[0][1] = 1;

@@ -100,6 +100,7 @@ private:
   float m_VertexCoords[4][3];
   float m_colors[4][3];
   float m_TexCoords[4][2];
+  float m_LUTTexCoords[4][2];
   unsigned int m_indices[2][3];
 
   // Value to modulo (%) frame count with
@@ -117,7 +118,7 @@ private:
   GLuint VAO = 0;
 #endif
   GLuint EBO = 0;
-  GLuint VBO[3] = {};
+  GLuint VBO[4] = {};
 
 private:
   uniformInputs GetInputData(uint64_t frameCount = 0);

@@ -35,4 +35,3 @@ protected:
   GLuint m_texture = 0;
   bool m_isOglVersion3orNewer = false;
 };
-
