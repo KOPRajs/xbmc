@@ -10,6 +10,7 @@
 
 #include "cores/RetroPlayer/shaders/IShaderLut.h"
 #include "cores/RetroPlayer/shaders/ShaderTypes.h"
+#include "guilib/Texture.h"
 
 #include <memory>
 #include <string>
@@ -26,7 +27,7 @@ class CRenderContext;
 namespace SHADER
 {
 class IShaderSampler;
-class IShaderTexture;
+class CTextureBase;
 struct ShaderLut;
 
 class CShaderLutDX : public IShaderLut
@@ -40,7 +41,7 @@ public:
 
   // Implementation of IShaderLut
   bool Create(RETRO::CRenderContext& context, const ShaderLut& lut) override;
-  IShaderTexture* GetTexture() override { return m_texture.get(); }
+  CTexture* GetTexture() override { return m_texture.get(); }
 
   /*!
    * \brief Gets sampler of LUT
@@ -51,10 +52,10 @@ public:
 private:
   static std::unique_ptr<IShaderSampler> CreateLUTSampler(
       RETRO::CRenderContext& context, const ShaderLut& lut); //! @todo Move context to class
-  static std::unique_ptr<IShaderTexture> CreateLUTexture(const ShaderLut& lut);
+  static std::unique_ptr<CTexture> CreateLUTexture(const ShaderLut& lut);
 
   std::unique_ptr<IShaderSampler> m_sampler;
-  std::unique_ptr<IShaderTexture> m_texture;
+  std::unique_ptr<CTexture> m_texture;
 };
 
 } // namespace SHADER

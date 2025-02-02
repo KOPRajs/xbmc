@@ -9,11 +9,11 @@
 #include "ShaderLutDX.h"
 
 #include "ShaderSamplerDX.h"
-#include "ShaderTextureDX.h"
 #include "ShaderUtilsDX.h"
 #include "cores/RetroPlayer/rendering/RenderContext.h"
 #include "cores/RetroPlayer/shaders/IShaderPreset.h"
 #include "rendering/dx/RenderSystemDX.h"
+#include "guilib/TextureDX.h"
 #include "utils/log.h"
 
 #include <utility>
@@ -36,7 +36,7 @@ bool CShaderLutDX::Create(RETRO::CRenderContext& context, const ShaderLut& lut)
     return false;
   }
 
-  std::unique_ptr<IShaderTexture> lutTexture(CreateLUTexture(lut));
+  std::unique_ptr<CTexture> lutTexture(CreateLUTexture(lut));
   if (!lutTexture)
   {
     CLog::LogF(LOGWARNING, "Couldn't create a LUT texture for LUT {}", lut.strId);
@@ -82,7 +82,7 @@ std::unique_ptr<IShaderSampler> CShaderLutDX::CreateLUTSampler(RETRO::CRenderCon
   return std::unique_ptr<IShaderSampler>(new CShaderSamplerDX(samp));
 }
 
-std::unique_ptr<IShaderTexture> CShaderLutDX::CreateLUTexture(const ShaderLut& lut)
+std::unique_ptr<CTexture> CShaderLutDX::CreateLUTexture(const ShaderLut& lut)
 {
   std::unique_ptr<CTexture> texture = CTexture::LoadFromFile(lut.path);
   auto* textureDX = static_cast<CDXTexture*>(texture.get());
@@ -90,7 +90,7 @@ std::unique_ptr<IShaderTexture> CShaderLutDX::CreateLUTexture(const ShaderLut& l
   if (textureDX == nullptr)
   {
     CLog::Log(LOGERROR, "Couldn't open LUT {}", lut.path);
-    return std::unique_ptr<IShaderTexture>();
+    return std::unique_ptr<CTexture>();
   }
 
   if (lut.mipmap)
@@ -99,6 +99,5 @@ std::unique_ptr<IShaderTexture> CShaderLutDX::CreateLUTexture(const ShaderLut& l
   textureDX->LoadToGPU();
 
   //! @todo Take care of allocation(?)
-  return std::unique_ptr<IShaderTexture>(
-      new CShaderTextureCDX(static_cast<CDXTexture*>(texture.release())));
+  return texture;
 }

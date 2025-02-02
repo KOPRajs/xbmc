@@ -8,15 +8,16 @@
 
 #include "ShaderLutGL.h"
 
-#ifndef HAS_GLES
-#include "ShaderTextureGL.h"
-#else
-#include "ShaderTextureGLES.h"
-#endif
 #include "ShaderUtilsGL.h"
 #include "cores/RetroPlayer/rendering/RenderContext.h"
 #include "cores/RetroPlayer/shaders/IShaderPreset.h"
 #include "rendering/gl/RenderSystemGL.h"
+#include "guilib/Texture.h"
+#ifndef HAS_GLES
+#include "guilib/TextureGL.h"
+#else
+#include "guilib/TextureGLES.h"
+#endif
 #include "utils/log.h"
 
 #include <utility>
@@ -32,7 +33,7 @@ CShaderLutGL::~CShaderLutGL() = default;
 
 bool CShaderLutGL::Create(RETRO::CRenderContext& context, const ShaderLut& lut)
 {
-  std::unique_ptr<IShaderTexture> lutTexture(CreateLUTTexture(context, lut));
+  std::unique_ptr<CTexture> lutTexture(CreateLUTTexture(context, lut));
   if (!lutTexture)
   {
     CLog::Log(LOGWARNING, "{} - Couldn't create a LUT texture for LUT {}", __FUNCTION__, lut.strId);
@@ -43,7 +44,7 @@ bool CShaderLutGL::Create(RETRO::CRenderContext& context, const ShaderLut& lut)
   return true;
 }
 
-std::unique_ptr<IShaderTexture> CShaderLutGL::CreateLUTTexture(RETRO::CRenderContext& context,
+std::unique_ptr<CTexture> CShaderLutGL::CreateLUTTexture(RETRO::CRenderContext& context,
                                                                const ShaderLut& lut)
 {
   std::unique_ptr<CTexture> texture = CTexture::LoadFromFile(lut.path);
@@ -56,7 +57,7 @@ std::unique_ptr<IShaderTexture> CShaderLutGL::CreateLUTTexture(RETRO::CRenderCon
   if (textureGL == nullptr)
   {
     CLog::Log(LOGERROR, "Couldn't open LUT {}", lut.path);
-    return std::unique_ptr<IShaderTexture>();
+    return std::unique_ptr<CTexture>();
   }
 
   if (lut.mipmap)
@@ -78,10 +79,8 @@ std::unique_ptr<IShaderTexture> CShaderLutGL::CreateLUTTexture(RETRO::CRenderCon
 #endif
 
 #ifndef HAS_GLES
-  return std::unique_ptr<IShaderTexture>(
-      new CShaderTextureGL(static_cast<CGLTexture*>(texture.release())));
+  return texture;
 #else
-  return std::unique_ptr<IShaderTexture>(
-      new CShaderTextureGLES(static_cast<CGLESTexture*>(texture.release())));
+  return texture;
 #endif
 }

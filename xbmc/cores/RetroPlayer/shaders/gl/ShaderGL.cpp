@@ -391,15 +391,15 @@ void CShaderGL::SetShaderParameters()
   for (const auto& lut : m_luts)
   {
 #ifndef HAS_GLES
-    auto* texture = static_cast<CShaderTextureGL*>(lut->GetTexture());
+    auto* texture = static_cast<CGLTexture*>(lut->GetTexture());
 #else
-    auto* texture = static_cast<CShaderTextureGLES*>(lut->GetTexture());
+    auto* texture = static_cast<CGLESTexture*>(lut->GetTexture());
 #endif
     if (texture != nullptr)
     {
       GLint paramLoc = glGetUniformLocation(m_shaderProgram, lut->GetID().c_str());
       glUniform1i(paramLoc, textureUnit);
-      texture->GetPointer()->BindToUnit(textureUnit);
+      texture->BindToUnit(textureUnit);
       textureUnit++;
     }
   }

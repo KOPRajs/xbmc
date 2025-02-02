@@ -256,7 +256,7 @@ void CShaderDX::SetShaderParameters(CD3DTexture& sourceTexture)
 
   for (const auto& lut : m_luts)
   {
-    auto* texture = dynamic_cast<CShaderTextureCDX*>(lut->GetTexture());
+    auto* texture = dynamic_cast<CDXTexture*>(lut->GetTexture());
     if (texture != nullptr)
       m_effect.SetTexture(lut->GetID().c_str(), texture->GetShaderResource());
   }
