@@ -328,14 +328,13 @@ bool CShaderPresetGL::CreateShaderTextures()
       //! @todo Enable usage of optimal texture sizes when all issues are fixed
       textureSize = scaledSize; // CShaderUtils::GetOptimalTextureSize(scaledSize)
 
+      std::unique_ptr<CTexture> texture = CTexture::CreateTexture(static_cast<unsigned int>(textureSize.x),
+                                                                  static_cast<unsigned int>(textureSize.y),
+                                                                  XB_FMT_A8R8G8B8); // Format is not used
 #ifndef HAS_GLES
-      auto textureGL = new CGLTexture(static_cast<unsigned int>(textureSize.x),
-                                      static_cast<unsigned int>(textureSize.y),
-                                      XB_FMT_A8R8G8B8); // Format is not used
+      auto* textureGL = static_cast<CGLTexture*>(texture.get());
 #else
-      auto textureGL = new CGLESTexture(static_cast<unsigned int>(textureSize.x),
-                                        static_cast<unsigned int>(textureSize.y),
-                                        XB_FMT_A8R8G8B8); // Format is not used
+      auto* textureGL = static_cast<CGLESTexture*>(texture.get());
 #endif
 
       textureGL->CreateTextureObject();
@@ -369,9 +368,11 @@ bool CShaderPresetGL::CreateShaderTextures()
 #endif
 
 #ifndef HAS_GLES
-      m_pShaderTextures.emplace_back(new CShaderTextureGL(*textureGL, nextPass.mipmap, pass.fbo.sRgbFramebuffer));
+      m_pShaderTextures.emplace_back(std::unique_ptr<IShaderTexture>(
+        new CShaderTextureGL(static_cast<CGLTexture*>(texture.release()), nextPass.mipmap, pass.fbo.sRgbFramebuffer)));
 #else
-      m_pShaderTextures.emplace_back(new CShaderTextureGLES(*textureGL, nextPass.mipmap, pass.fbo.sRgbFramebuffer));
+      m_pShaderTextures.emplace_back(std::unique_ptr<IShaderTexture>(
+        new CShaderTextureGLES(static_cast<CGLESTexture*>(texture.release()), nextPass.mipmap, pass.fbo.sRgbFramebuffer)));
 #endif
     }
 
