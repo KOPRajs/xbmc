@@ -36,7 +36,7 @@ bool CShaderLutGL::Create(RETRO::CRenderContext& context, const ShaderLut& lut)
   std::unique_ptr<CTexture> lutTexture(CreateLUTTexture(context, lut));
   if (!lutTexture)
   {
-    CLog::Log(LOGWARNING, "{} - Couldn't create a LUT texture for LUT {}", __FUNCTION__, lut.strId);
+    CLog::LogF(LOGWARNING, "Couldn't create a texture for LUT: {}", lut.strId);
     return false;
   }
 
@@ -56,7 +56,7 @@ std::unique_ptr<CTexture> CShaderLutGL::CreateLUTTexture(RETRO::CRenderContext& 
 
   if (textureGL == nullptr)
   {
-    CLog::Log(LOGERROR, "Couldn't open LUT {}", lut.path);
+    CLog::Log(LOGERROR, "Couldn't open LUT: {}", lut.path);
     return std::unique_ptr<CTexture>();
   }
 

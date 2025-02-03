@@ -43,18 +43,9 @@ public:
   bool Create(RETRO::CRenderContext& context, const ShaderLut& lut) override;
   CTexture* GetTexture() override { return m_texture.get(); }
 
-  /*!
-   * \brief Gets sampler of LUT
-   * \return Pointer to the sampler associated with the LUT
-   */
-  IShaderSampler* GetSampler() { return m_sampler.get(); }
-
 private:
-  static std::unique_ptr<IShaderSampler> CreateLUTSampler(
-      RETRO::CRenderContext& context, const ShaderLut& lut); //! @todo Move context to class
   static std::unique_ptr<CTexture> CreateLUTexture(const ShaderLut& lut);
 
-  std::unique_ptr<IShaderSampler> m_sampler;
   std::unique_ptr<CTexture> m_texture;
 };
 
