@@ -155,10 +155,6 @@ void CShaderGL::Render(IShaderTexture* source, IShaderTexture* target)
 #else
   auto* sourceGL = static_cast<CShaderTextureGLES*>(source);
 #endif
-  sourceGL->GetPointer()->BindToUnit(0);
-
-  if (sourceGL->IsMipmapped())
-    glGenerateMipmap(GL_TEXTURE_2D);
 
   glUseProgram(m_shaderProgram);
 
@@ -166,9 +162,7 @@ void CShaderGL::Render(IShaderTexture* source, IShaderTexture* target)
   glBindVertexArray(VAO);
 #endif
 
-  SetShaderParameters();
-
-  glUniformMatrix4fv(m_MVPMatrixLoc, 1, GL_FALSE, reinterpret_cast<const GLfloat*>(&m_MVP));
+  SetShaderParameters(*sourceGL->GetPointer());
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
   glBufferData(GL_ARRAY_BUFFER, sizeof(m_VertexCoords), m_VertexCoords, GL_STATIC_DRAW);
@@ -376,16 +370,31 @@ void CShaderGL::GetUniformLocs()
   m_MVPMatrixLoc = glGetUniformLocation(m_shaderProgram, "MVPMatrix");
 }
 
-void CShaderGL::SetShaderParameters()
+void CShaderGL::SetShaderParameters(CGLTexture& sourceTexture)
 {
-  unsigned int textureUnit = 1; // GL_TEXTURE0 is used by source texture
-
   // Set shader uniforms
   glUniform1f(m_FrameDirectionLoc, m_uniformInputs.frame_direction);
   glUniform1i(m_FrameCountLoc, m_uniformInputs.frame_count);
   glUniform2f(m_OutputSizeLoc, m_uniformInputs.output_size.x, m_uniformInputs.output_size.y);
   glUniform2f(m_TextureSizeLoc, m_uniformInputs.texture_size.x, m_uniformInputs.texture_size.y);
   glUniform2f(m_InputSizeLoc, m_uniformInputs.video_size.x, m_uniformInputs.video_size.y);
+  glUniformMatrix4fv(m_MVPMatrixLoc, 1, GL_FALSE, reinterpret_cast<const GLfloat*>(&m_MVP));
+
+  // Set #pragma parameters
+  for (const auto& param : m_shaderParameters)
+  {
+    GLint paramLoc = glGetUniformLocation(m_shaderProgram, param.first.c_str());
+    glUniform1f(paramLoc, param.second);
+  }
+
+  // Set source texture
+  unsigned int textureUnit = 0;
+  sourceTexture.BindToUnit(textureUnit);
+  textureUnit++;
+
+  // Regenerate source texture mipmaps
+  if (sourceTexture.IsMipmapped())
+    glGenerateMipmap(GL_TEXTURE_2D);
 
   // Set lookup textures
   for (const auto& lut : m_luts)
@@ -428,14 +437,5 @@ void CShaderGL::SetShaderParameters()
     glUniform2f(paramLoc, m_passesUniformFrameInputs[i].input_size.x, m_passesUniformFrameInputs[i].input_size.y);
     paramLoc = glGetUniformLocation(m_shaderProgram, (paramPassPrev + "InputSize").c_str());
     glUniform2f(paramLoc, m_passesUniformFrameInputs[i].input_size.x, m_passesUniformFrameInputs[i].input_size.y);
-  }
-
-  glActiveTexture(GL_TEXTURE0);
-
-  // Set #pragma parameters
-  for (const auto& param : m_shaderParameters)
-  {
-    GLint paramLoc = glGetUniformLocation(m_shaderProgram, param.first.c_str());
-    glUniform1f(paramLoc, param.second);
   }
 }

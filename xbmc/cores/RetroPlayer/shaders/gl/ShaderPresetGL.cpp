@@ -347,6 +347,12 @@ bool CShaderPresetGL::CreateShaderTextures()
 
       ShaderPass& nextPass = m_passes[shaderIdx + 1];
 
+      if (nextPass.mipmap)
+        textureGL->SetMipmapping();
+
+      textureGL->SetScalingMethod(nextPass.filter == FILTER_TYPE_LINEAR ? TEXTURE_SCALING::LINEAR
+                                                                  : TEXTURE_SCALING::NEAREST);
+
       auto wrapType = CShaderUtilsGL::TranslateWrapType(nextPass.wrap);
       auto magFilterType = (nextPass.filter == FILTER_TYPE_LINEAR ? GL_LINEAR : GL_NEAREST);
       auto minFilterType =
@@ -369,10 +375,10 @@ bool CShaderPresetGL::CreateShaderTextures()
 
 #ifndef HAS_GLES
       m_pShaderTextures.emplace_back(std::unique_ptr<IShaderTexture>(
-        new CShaderTextureGL(static_cast<CGLTexture*>(texture.release()), nextPass.mipmap, pass.fbo.sRgbFramebuffer)));
+        new CShaderTextureGL(static_cast<CGLTexture*>(texture.release()), pass.fbo.sRgbFramebuffer)));
 #else
       m_pShaderTextures.emplace_back(std::unique_ptr<IShaderTexture>(
-        new CShaderTextureGLES(static_cast<CGLESTexture*>(texture.release()), nextPass.mipmap, pass.fbo.sRgbFramebuffer)));
+        new CShaderTextureGLES(static_cast<CGLESTexture*>(texture.release()), pass.fbo.sRgbFramebuffer)));
 #endif
     }
 
