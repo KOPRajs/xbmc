@@ -9,8 +9,11 @@
 #include "RenderBufferPoolDMA.h"
 
 #include "RenderBufferDMA.h"
-#include "cores/RetroPlayer/rendering/RenderVideoSettings.h"
-#include "cores/RetroPlayer/rendering/VideoRenderers/RPRendererDMAUtils.h"
+#if !defined(HAS_GLES)
+#include "cores/RetroPlayer/rendering/VideoRenderers/RPRendererDMAOpenGL.h"
+#else
+#include "cores/RetroPlayer/rendering/VideoRenderers/RPRendererDMAOpenGLES.h"
+#endif
 
 #include <drm_fourcc.h>
 
@@ -23,8 +26,13 @@ CRenderBufferPoolDMA::CRenderBufferPoolDMA(CRenderContext& context) : m_context(
 
 bool CRenderBufferPoolDMA::IsCompatible(const CRenderVideoSettings& renderSettings) const
 {
-  if (!CRPRendererDMAUtils::SupportsScalingMethod(renderSettings.GetScalingMethod()))
+#if !defined(HAS_GLES)
+  if (!CRPRendererDMAOpenGL::SupportsScalingMethod(renderSettings.GetScalingMethod()))
     return false;
+#else
+  if (!CRPRendererDMAOpenGLES::SupportsScalingMethod(renderSettings.GetScalingMethod()))
+    return false;
+#endif
 
   return true;
 }

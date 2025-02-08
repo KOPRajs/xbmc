@@ -47,7 +47,7 @@ public:
   ~CRPRendererDMAOpenGL() override = default;
 
 protected:
-  // Implementation of CRPRendererOpenGLES
+  // Implementation of CRPRendererOpenGL
   void Render(uint8_t alpha) override;
 
   std::map<CRenderBufferDMA*, std::unique_ptr<RenderBufferTextures>> m_RBTexturesMap;

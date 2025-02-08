@@ -19,9 +19,6 @@ if(TARGET OpenGL::GLES)
 endif()
 
 if(("gbm" IN_LIST CORE_PLATFORM_NAME_LC OR "wayland" IN_LIST CORE_PLATFORM_NAME_LC) AND TARGET EGL::EGL)
-  list(APPEND SOURCES RPRendererDMAUtils.cpp)
-  list(APPEND HEADERS RPRendererDMAUtils.h)
-
   if(TARGET OpenGL::GL)
     list(APPEND SOURCES RPRendererDMAOpenGL.cpp)
     list(APPEND HEADERS RPRendererDMAOpenGL.h)
