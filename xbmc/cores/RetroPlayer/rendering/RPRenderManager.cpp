@@ -267,7 +267,25 @@ void CRPRenderManager::AddFrame(const uint8_t* data,
 
 bool CRPRenderManager::Create(unsigned int width, unsigned int height)
 {
-  //! @todo
+  std::shared_ptr<CRPBaseRenderer> renderer = GetRendererForSettings(nullptr);
+  if (!renderer)
+    return false;
+
+  renderer->Configure(m_format);
+
+  for (IRenderBufferPool* bufferPool : m_processInfo.GetBufferManager().GetBufferPools())
+  {
+    if (!bufferPool->HasVisibleRenderer())
+      continue;
+
+    IRenderBuffer* renderBuffer = bufferPool->GetBuffer(width, height);
+    if (renderBuffer != nullptr)
+    {
+      renderBuffer->Release();
+      return true;
+    }
+  }
+
   return false;
 }
 
@@ -291,7 +309,12 @@ uintptr_t CRPRenderManager::GetCurrentFramebuffer(unsigned int width, unsigned i
 
 void CRPRenderManager::RenderFrame()
 {
-  //! @todo
+  std::unique_lock<CCriticalSection> lock(m_bufferMutex);
+
+  for (auto renderBuffer : m_renderBuffers)
+    renderBuffer->Release();
+
+  m_renderBuffers = std::move(m_pendingBuffers);
 }
 
 void CRPRenderManager::SetSpeed(double speed)

@@ -54,9 +54,7 @@ bool CRetroPlayerRendering::OpenStream(const StreamProperties& properties)
   CLog::Log(LOGDEBUG, "RetroPlayer[RENDERING]: Render manager configured");
 
   //! @todo: This must be called from the rendering thread
-  //return m_renderManager.Create(width, height);
-
-  return false;
+  return m_renderManager.Create(width, height);
 }
 
 void CRetroPlayerRendering::CloseStream()

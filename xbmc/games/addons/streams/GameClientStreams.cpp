@@ -100,9 +100,7 @@ bool CGameClientStreams::EnableHardwareRendering(const game_hw_rendering_propert
   // Store hardware rendering properties
   m_hwProperties = properties;
 
-  //! @todo Finish OpenGL support
-  CLog::Log(LOGERROR, "Hardware rendering not implemented");
-  return false;
+  return true;
 }
 
 game_proc_address_t CGameClientStreams::GetHwProcedureAddress(const char* symbol)
