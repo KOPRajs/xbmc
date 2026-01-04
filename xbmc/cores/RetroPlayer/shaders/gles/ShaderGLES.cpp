@@ -24,6 +24,9 @@ CShaderGLES::CShaderGLES() = default;
 
 CShaderGLES::~CShaderGLES()
 {
+  if (m_shaderProgram != 0)
+    glDeleteProgram(m_shaderProgram);
+
   glDeleteBuffers(1, &m_shaderIndexVBO);
   glDeleteBuffers(3, m_shaderVertexVBO.data());
 }
