@@ -14,7 +14,10 @@
 
 #include "system_gl.h"
 
-class CGLTexture;
+namespace KODI::RETRO
+{
+class IRenderBuffer;
+} // namespace KODI::RETRO
 
 namespace KODI::SHADER
 {
@@ -22,7 +25,7 @@ namespace KODI::SHADER
 class CShaderTextureGL : public IShaderTexture
 {
 public:
-  CShaderTextureGL(std::shared_ptr<CGLTexture> texture, bool sRgbFramebuffer);
+  CShaderTextureGL(std::shared_ptr<RETRO::IRenderBuffer> texture, bool sRgbFramebuffer);
   ~CShaderTextureGL() override;
 
   // Implementation of IShaderTexture
@@ -30,8 +33,8 @@ public:
   float GetHeight() const override;
 
   // OpenGL interface
-  CGLTexture& GetTexture() { return *m_texture; }
-  const CGLTexture& GetTexture() const { return *m_texture; }
+  RETRO::IRenderBuffer& GetTexture() { return *m_texture; }
+  const RETRO::IRenderBuffer& GetTexture() const { return *m_texture; }
   bool IsSRGBFramebuffer() const { return m_sRgbFramebuffer; }
 
   // Frame buffer interface
@@ -40,8 +43,9 @@ public:
   void UnbindFBO() const;
 
 private:
-  std::shared_ptr<CGLTexture> m_texture;
+  std::shared_ptr<RETRO::IRenderBuffer> m_texture;
   bool m_sRgbFramebuffer{false};
   GLuint FBO{0};
 };
+
 } // namespace KODI::SHADER

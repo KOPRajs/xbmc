@@ -16,10 +16,13 @@
 
 #include "system_gl.h"
 
-class CGLTexture;
-
 namespace KODI
 {
+namespace SHADER
+{
+class CShaderTextureGL;
+} // namespace SHADER
+
 namespace RETRO
 {
 class CRenderContext;
@@ -66,8 +69,8 @@ protected:
   };
   struct RenderBufferTextures
   {
-    std::shared_ptr<CGLTexture> source;
-    std::shared_ptr<CGLTexture> target;
+    std::shared_ptr<SHADER::CShaderTextureGL> source;
+    std::shared_ptr<SHADER::CShaderTextureGL> target;
   };
 
   // implementation of CRPBaseRenderer

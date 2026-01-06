@@ -8,14 +8,15 @@
 
 #include "ShaderTextureGL.h"
 
-#include "guilib/TextureGL.h"
+#include "cores/RetroPlayer/buffers/video/RenderBufferSysMem.h"
 #include "utils/log.h"
 
 #include <cassert>
 
 using namespace KODI::SHADER;
 
-CShaderTextureGL::CShaderTextureGL(std::shared_ptr<CGLTexture> texture, bool sRgbFramebuffer)
+CShaderTextureGL::CShaderTextureGL(std::shared_ptr<RETRO::IRenderBuffer> texture,
+                                   bool sRgbFramebuffer)
   : m_texture(std::move(texture)),
     m_sRgbFramebuffer(sRgbFramebuffer)
 {
@@ -48,7 +49,7 @@ bool CShaderTextureGL::CreateFBO()
 
 bool CShaderTextureGL::BindFBO()
 {
-  const GLuint renderTargetID = m_texture->GetTextureID();
+  const GLuint renderTargetID = m_texture->TextureID();
   if (renderTargetID == 0)
     return false;
 

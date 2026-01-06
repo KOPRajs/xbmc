@@ -14,6 +14,11 @@
 
 namespace KODI
 {
+namespace SHADER
+{
+class CShaderTextureGL;
+} // namespace SHADER
+
 namespace RETRO
 {
 class CRenderBufferDMA;
